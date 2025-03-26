@@ -13,7 +13,7 @@ impl Embedding {
         for _ in 0..vocab_size {
             let mut embedding = Vec::new(); 
             for _ in 0..embedding_dim {
-                embedding.push(rng.random());
+                embedding.push(rng.gen_range(0.0..1.0));
             }
             embeddings.push(embedding);
         } 
