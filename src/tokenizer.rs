@@ -10,7 +10,7 @@ pub struct Tokenizer {
 impl Tokenizer {
    pub fn new(oov_token: Option<String>) -> Self {
       let mut word_index = HashMap::new(); 
-      let mut distinct_word_count = 1;
+      let mut distinct_word_count = 0;
       if let Some(oov_token) = oov_token.clone() {
         word_index.insert(oov_token, distinct_word_count);
         distinct_word_count += 1; 
@@ -32,8 +32,8 @@ impl Tokenizer {
             let words = self.extract_words(sentence);
             for word in &words {
                 if !self.word_index.contains_key(word) {
-                    self.distinct_word_count += 1;
                     self.word_index.insert(word.clone(), self.distinct_word_count);
+                    self.distinct_word_count += 1;
                 }  
             }
         }

@@ -167,17 +167,18 @@ impl NeuralNetwork {
         }
     }
 
-    pub fn train(&mut self, sentences: &Vec<String>, labels: &Vec<f32>) {
+    pub fn train(&mut self, sentences: &Vec<String>, labels: &Vec<f32>, epochs: i32) {
         let sequences = self.tokenizer.texts_to_sequences(&sentences); 
-        for (sequence, label) in zip(sequences, labels) {
-            let vector = self.embedding.pool_embedding(&sequence);  
-            let value = self.run_iteration(&vector);
-            println!("{}", value);
-            self.perform_backpropagation(value, *label);
+        let vectors: Vec<Vec<f32>> = sequences.iter().map(|sequence| self.embedding.pool_embedding(&sequence)).collect();
+        for _ in (0..epochs) {
+            for (vector, label) in zip(vectors.iter(), labels.iter()) {
+                let value = self.run_iteration(&vector);
+                self.perform_backpropagation(value, *label);
+            }
         }
     }
 
-    pub fn perform_backpropagation(&mut self, observed: f32, label: f32) {
+    fn perform_backpropagation(&mut self, observed: f32, label: f32) {
         let mut squared_error_diff = squared_error_diff(observed, label);
         let result_layer = self.layers.get(self.layers.len() - 1).unwrap();
         let mut initial_diffs: Vec<f32> = (0..result_layer.get_neuron_count()).map(|_| squared_error_diff.clone()).collect();
