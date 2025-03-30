@@ -26,3 +26,9 @@ pub fn squared_error(observed: f32, expected: f32) -> f32{
 pub fn squared_error_diff(observed: f32, expected: f32) -> f32{
     return -2.0 * (expected - observed)
 } 
+
+#[derive(Clone)]
+pub enum Activation {
+    Relu,
+    Sigmoid
+}
