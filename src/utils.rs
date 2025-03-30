@@ -18,3 +18,11 @@ pub fn relu_diff(x: f32) -> f32 {
 pub fn relu(x: f32) -> f32 {
     x.max(0.0) 
 }
+
+pub fn squared_error(observed: f32, expected: f32) -> f32{
+    return (expected - observed).powf(2.0)
+} 
+
+pub fn squared_error_diff(observed: f32, expected: f32) -> f32{
+    return -2.0 * (expected - observed)
+} 

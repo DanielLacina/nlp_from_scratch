@@ -178,7 +178,7 @@ impl NeuralNetwork {
     }
 
     pub fn perform_backpropagation(&mut self, observed: f32, label: f32) {
-        let mut squared_error_diff = -2.0 * (label - observed);
+        let mut squared_error_diff = squared_error_diff(observed, label);
         let result_layer = self.layers.get(self.layers.len() - 1).unwrap();
         let mut initial_diffs: Vec<f32> = (0..result_layer.get_neuron_count()).map(|_| squared_error_diff.clone()).collect();
         let layers_len = self.layers.len();
