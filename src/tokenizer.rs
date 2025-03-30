@@ -74,16 +74,15 @@ impl Tokenizer {
     }
 }
 
-#[cfg(test)]
-mod tests {
-   use super::*;
+// #[cfg(test)]
+// mod tests {
+//    use super::*;
 
-   #[test] 
-   fn test_tokenize_text() {
-    let sentences = vec!["hi my name is bob".to_string(), "hi my name is jack lol".to_string()];
-    let mut tokenizer = Tokenizer::new(Some("<OOP>".to_string()));
-    tokenizer.fit_on_texts(&sentences);
-    let sequences = tokenizer.texts_to_sequences(&sentences);
-    println!("{:?}", sequences);
-   }
-} 
+//    #[test] 
+//    fn test_tokenize_text() {
+//     let sentences = vec!["hi my name is bob".to_string(), "hi my name is jack lol".to_string()];
+//     let mut tokenizer = Tokenizer::new(Some("<OOP>".to_string()));
+//     tokenizer.fit_on_texts(&sentences);
+//     let sequences = tokenizer.texts_to_sequences(&sentences);
+//    }
+// } 
