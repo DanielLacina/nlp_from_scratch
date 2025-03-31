@@ -62,14 +62,14 @@ impl Neuron {
     pub fn perform_backpropagation(&mut self, gradient_value: f32) -> Vec<f32> {
         // returns initial gradient with respect to input values  
         let activation_diff = self.diff_of_activation();
-        let gradient_value = activation_diff * gradient_value; 
-        self.weights = zip(&self.last_input, &self.weights).map(|(input, weight)| weight - (*input * gradient_value * self.learning_rate)).collect();
-        self.bias -= gradient_value * self.learning_rate; 
-        let updated_input_gradient =  self.weights.clone().iter().map(|weight| weight * gradient_value).collect(); 
+        let updated_gradient_value = activation_diff * gradient_value; 
+        let updated_input_gradient =  self.weights.clone().iter().map(|weight| weight * updated_gradient_value).collect(); 
+        self.weights = zip(&self.last_input, &self.weights).map(|(input, weight)| weight - (*input * updated_gradient_value * self.learning_rate)).collect();
+        self.bias -= updated_gradient_value * self.learning_rate; 
         return updated_input_gradient;  
     }
 
-    pub fn diff_of_activation(&self) -> f32 {
+    fn diff_of_activation(&self) -> f32 {
         let activation_diff = match &self.activation {
             Activation::Relu => {
                 relu_diff(self.unactivated_result)
@@ -90,10 +90,12 @@ mod tests {
     fn test_initialization() {
         let num_weights = 5; 
         let activation = Activation::Sigmoid;
-        let neuron = Neuron::new(num_weights, activation, 0.1);
+        let learning_rate = 0.1;
+        let neuron = Neuron::new(num_weights, activation, learning_rate);
         assert!(matches!(neuron.activation, activation));
         assert!(neuron.bias == 0.0);
         assert!(neuron.weights.len() as i32 == num_weights);
+        assert!(neuron.learning_rate == learning_rate);
     }
     #[test]
     fn test_calculate() {
@@ -101,6 +103,25 @@ mod tests {
         let mut neuron = Neuron::new(vector.len() as i32, Activation::Relu, 0.1);
         neuron.calculate_result(&vector);         
         assert!(neuron.last_input == vector);
-        //assert!();
+        let expected_unactivated_result = dot_product(&neuron.weights, &vector) + neuron.bias;
+        assert!(neuron.unactivated_result == expected_unactivated_result);
+        assert!(neuron.activated_result == neuron.apply_activation(expected_unactivated_result));
+    }
+    #[test]
+    fn test_backpropagation() {
+        let mut neuron = Neuron::new(5, Activation::Sigmoid, 0.1);
+        let initial_bias = neuron.bias;
+        let initial_weights = neuron.weights.clone();
+        let input_gradient_value = 0.2;
+        let updated_gradient_input = neuron.perform_backpropagation(input_gradient_value);
+        let diff_of_activation = neuron.diff_of_activation();
+        let updated_gradient_value = input_gradient_value * diff_of_activation;
+
+
+        let expected_gradient_input: Vec<f32> = initial_weights.iter().map(|weight| weight * updated_gradient_value).collect();
+        assert!(updated_gradient_input == expected_gradient_input);
+        assert!(neuron.bias == (initial_bias - (updated_gradient_value * neuron.learning_rate)));
+        let expected_weights: Vec<f32> = zip(&neuron.last_input, &initial_weights).map(|(input, weight)| weight - (input * updated_gradient_value *neuron.learning_rate)).collect();
+        assert!(neuron.weights == expected_weights);
     }
 }
