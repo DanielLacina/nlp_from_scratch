@@ -7,7 +7,6 @@ pub struct NeuralNetwork {
     layers: Vec<Layer>,
     embedding: Arc<Embedding>,
     tokenizer: Arc<Tokenizer>,
-    learning_rate: f32
 } 
 
 impl NeuralNetwork {
@@ -19,15 +18,14 @@ impl NeuralNetwork {
         let mut num_weights = embedding_dim;
         for layer_config in layers_configuration {
             let neuron_count = layer_config.neuron_count.clone();
-            let layer = Layer::new(neuron_count.clone(), num_weights, layer_config.activation.clone());
+            let layer = Layer::new(neuron_count.clone(), num_weights, layer_config.activation.clone(), learning_rate);
             layers.push(layer);
             num_weights = neuron_count; 
         } 
         return Self {
             tokenizer,
             layers,  
-            embedding,
-            learning_rate
+            embedding
         }
     }
 
@@ -36,27 +34,26 @@ impl NeuralNetwork {
         let vectors: Vec<Vec<f32>> = sequences.iter().map(|sequence| self.embedding.pool_embedding(&sequence)).collect();
         for _ in (0..epochs) {
             for (vector, label) in zip(vectors.iter(), labels.iter()) {
-                let value = self.run_iteration(&vector);
-                self.perform_backpropagation(value, *label);
+                let values = self.run_iteration(&vector);
+                self.perform_backpropagation(&values, &vec![*label]);
             }
         }
     }
 
-    fn perform_backpropagation(&mut self, observed: f32, label: f32) {
-        let mut squared_error_diff = squared_error_diff(observed, label);
-        let result_layer = self.layers.get(self.layers.len() - 1).unwrap();
-        let mut initial_diffs: Vec<f32> = (0..result_layer.get_neuron_count()).map(|_| squared_error_diff.clone()).collect();
+    fn perform_backpropagation(&mut self, results: &Vec<f32>, labels: &Vec<f32>) {
+        let mut input_gradients: Vec<f32> = zip(results, labels).map(|(result, label)| squared_error_diff(*result,  *label)).collect();
         for layer in self.layers.iter_mut().rev() {
-            initial_diffs = layer.perform_backpropagation(&initial_diffs, self.learning_rate.clone());
+            input_gradients = layer.perform_backpropagation(&input_gradients);
         }
     }
 
-    fn run_iteration(&mut self, vector: &Vec<f32>) -> f32 {
+    fn run_iteration(&mut self, vector: &Vec<f32>) -> Vec<f32> {
         let mut current_input = vector.clone(); 
         for layer in self.layers.iter_mut() {
             let results = layer.calculate_results(&current_input);
             current_input = results;
         } 
-        return current_input[0];
+        let results = current_input; 
+        return results;
     }
 } 

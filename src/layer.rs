@@ -13,10 +13,10 @@ pub struct Layer {
 }
 
 impl Layer {
-    pub fn new(num_neurons: i32, num_weights: i32, activation: Activation) -> Self {
+    pub fn new(num_neurons: i32, num_weights: i32, activation: Activation, learning_rate: f32) -> Self {
         let mut neurons = Vec::new();
         for _ in (0..num_neurons) {
-            neurons.push(Neuron::new(num_weights, activation.clone()));
+            neurons.push(Neuron::new(num_weights, activation.clone(), learning_rate));
         }
         return Self {
             neurons
@@ -26,7 +26,7 @@ impl Layer {
     pub fn calculate_results(&mut self, vector: &Vec<f32>) -> Vec<f32> {
         let mut results = Vec::new();
         for neuron in  self.neurons.iter_mut() {
-            let result = neuron.calculate(vector);
+            let result = neuron.calculate_result(vector);
             results.push(result);
         } 
         return results;
@@ -36,20 +36,16 @@ impl Layer {
         return self.neurons.len() as i32;
     } 
 
-    pub fn perform_backpropagation(&mut self, inital_diffs: &Vec<f32>, learning_rate: f32) -> Vec<f32> {
-        let mut sum_diff_with_respect_to_input_neurons = Vec::new();
-        for (neuron , initial_diff) in zip(self.neurons.iter_mut(), inital_diffs.iter()) {
-             let activation_function_diff = neuron.calculate_diff_of_activation_function();
-             let current_diff = *initial_diff * activation_function_diff;
-             neuron.subtract_diff_with_respect_to_weights_from_weights(current_diff, learning_rate);
-             neuron.subtract_diff_with_respect_to_bias_from_bias(current_diff, learning_rate);
-             let diff_with_respect_to_input_neurons = neuron.calculate_diff_with_respect_to_input_neurons(current_diff);
-             if sum_diff_with_respect_to_input_neurons.len() == 0 {
-                sum_diff_with_respect_to_input_neurons = diff_with_respect_to_input_neurons;
+    pub fn perform_backpropagation(&mut self, input_gradient: &Vec<f32>) -> Vec<f32> {
+        let mut updated_gradient_values = Vec::new();
+        for (neuron , gradient_value) in zip(self.neurons.iter_mut(), input_gradient.iter()) {
+             let updated_input_gradient =  neuron.perform_backpropagation(*gradient_value);
+             if updated_gradient_values.len() == 0 {
+                updated_gradient_values = updated_input_gradient;
              } else {
-                sum_diff_with_respect_to_input_neurons = zip(sum_diff_with_respect_to_input_neurons, diff_with_respect_to_input_neurons).map(|(sum, diff)| sum + diff).collect();
+                updated_gradient_values = zip(&updated_gradient_values, &updated_input_gradient).map(|(sum, update)| sum + update).collect();
              }
         }
-        sum_diff_with_respect_to_input_neurons
+        updated_gradient_values
     }
 }
