@@ -7,6 +7,7 @@ pub struct NeuralNetwork {
     layers: Vec<Layer>,
     embedding: Arc<Embedding>,
     tokenizer: Arc<Tokenizer>,
+    mse_scores: Vec<f32>
 } 
 
 impl NeuralNetwork {
@@ -25,7 +26,8 @@ impl NeuralNetwork {
         return Self {
             tokenizer,
             layers,  
-            embedding
+            embedding,
+            mse_scores: Vec::new()
         }
     }
 
@@ -33,10 +35,16 @@ impl NeuralNetwork {
         let sequences = self.tokenizer.texts_to_sequences(&sentences); 
         let vectors: Vec<Vec<f32>> = sequences.iter().map(|sequence| self.embedding.pool_embedding(&sequence)).collect();
         for _ in (0..epochs) {
+            let mut sum = 0.0;
             for (vector, label) in zip(vectors.iter(), labels.iter()) {
                 let values = self.run_iteration(&vector);
+                let squared_errors = zip(&values, &vec![label]).map(|(result, label)| squared_error(*result, **label)).collect();
+                let squared_error = sum_vector(&squared_errors);
+                sum += squared_error;
                 self.perform_backpropagation(&values, &vec![*label]);
             }
+            let mse = sum/vectors.len() as f32;
+            self.mse_scores.push(mse);
         }
     }
 
@@ -55,5 +63,9 @@ impl NeuralNetwork {
         } 
         let results = current_input; 
         return results;
+    }
+
+    pub fn get_mse_scores(&self) -> &Vec<f32> {
+       return &self.mse_scores; 
     }
 } 
