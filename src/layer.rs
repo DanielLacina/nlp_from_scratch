@@ -1,7 +1,7 @@
 use crate::neuron::Neuron;
 use crate::utils::*;
 use std::iter::zip;
-
+use std::sync::Arc;
 
 pub struct LayerConfig {
     pub neuron_count: i32,
@@ -9,7 +9,7 @@ pub struct LayerConfig {
 }
 
 pub struct Layer {
-    neurons: Vec<Neuron>,
+    neurons: Arc<Vec<Neuron>>,
 }
 
 impl Layer {
@@ -19,13 +19,13 @@ impl Layer {
             neurons.push(Neuron::new(num_weights, activation.clone(), learning_rate));
         }
         return Self {
-            neurons
+            neurons: Arc::new(neurons)
         };
     } 
 
-    pub fn calculate_results(&mut self, vector: &Vec<f32>) -> Vec<f32> {
+    pub fn calculate_results(&self, vector: &Vec<f32>) -> Vec<f32> {
         let mut results = Vec::new();
-        for neuron in  self.neurons.iter_mut() {
+        for neuron in self.neurons.iter() {
             let result = neuron.calculate_result(vector);
             results.push(result);
         } 
@@ -36,9 +36,9 @@ impl Layer {
         return self.neurons.len() as i32;
     } 
 
-    pub fn perform_backpropagation(&mut self, input_gradient: &Vec<f32>) -> Vec<f32> {
+    pub fn perform_backpropagation(&self, input_gradient: &Vec<f32>) -> Vec<f32> {
         let mut updated_gradient_values = Vec::new();
-        for (neuron , gradient_value) in zip(self.neurons.iter_mut(), input_gradient.iter()) {
+        for (neuron , gradient_value) in zip(self.neurons.iter(), input_gradient.iter()) {
              let updated_input_gradient =  neuron.perform_backpropagation(*gradient_value);
              if updated_gradient_values.len() == 0 {
                 updated_gradient_values = updated_input_gradient;

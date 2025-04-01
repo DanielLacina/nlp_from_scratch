@@ -44,6 +44,25 @@ pub fn sum_vector(v: &Vec<f32>) -> f32 {
     return sum;
 }
 
+pub fn average_vector(v: &Vec<f32>) -> f32 {
+    let sum = sum_vector(v); 
+    return sum/v.len() as f32
+}
+
+pub fn pool_2d_vector(twod_vector: &Vec<Vec<f32>>) -> Vec<f32> {
+    let mut sum_vector = Vec::new();  
+    for vector in twod_vector {
+       if sum_vector.is_empty() {
+          sum_vector = vector.clone();
+       } else {
+          sum_vector = zip(sum_vector, vector).map(|(sum, value)| sum + value).collect();  
+       }
+    } 
+    let twod_vector_len = twod_vector.len() as f32;
+    let pooled_vector = sum_vector.iter().map(|value| value/twod_vector_len).collect();
+    return pooled_vector;
+}
+
 #[derive(Clone)]
 pub enum Activation {
     Relu,
