@@ -73,8 +73,7 @@ impl Neuron {
         self.last_inputs.write().unwrap().clear();
     }
 
-    pub fn perform_backpropagation(&self, gradient_value: f32) -> Vec<f32> {
-        // returns initial gradient with respect to input values  
+    fn update_parameters(&self, gradient_value: f32) -> Vec<f32> {
         let unactivated_results: Vec<f32> = self.unactivated_results.iter().map(|pair| pair.key().inner()).collect();  
         let unactivated_result = sum_vector(&unactivated_results);
         let activation_diff = self.diff_of_activation(unactivated_result);
@@ -86,6 +85,12 @@ impl Neuron {
         *weights = zip(last_input.iter(), weights.iter()).map(|(input, weight)| weight - (*input * updated_gradient_value * self.learning_rate)).collect();
         let mut bias = self.bias.write().unwrap();
         *bias -= updated_gradient_value * self.learning_rate; 
+        return updated_input_gradient;
+    } 
+
+    pub fn perform_backpropagation(&self, gradient_value: f32) -> Vec<f32> {
+        // returns initial gradient with respect to input values  
+        let updated_input_gradient = self.update_parameters(gradient_value); 
         self.clear_iteration_data();
         return updated_input_gradient;  
     }
